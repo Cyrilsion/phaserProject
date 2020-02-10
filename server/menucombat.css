@@ -1,0 +1,17 @@
+#visuel{
+
+	width: 500px;
+	height: 500px;
+	position: absolute;
+	
+}
+
+#liste{
+	
+	left: 550px;
+	top: 50px;
+	position: absolute;
+	width: 300px;
+	height: 500px;
+	
+}
