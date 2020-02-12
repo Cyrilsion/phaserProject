@@ -1,2 +1,5 @@
-python2 server.py &
-firefox 127.0.0.1:8000
+cd dist
+rm *
+cd ../src
+tsc
+
