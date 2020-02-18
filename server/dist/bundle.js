@@ -120,6 +120,7 @@ while (inventaire.getHeros().hasNext()) {
     inventaire.getHeros().Next();
 }
 /////////
+///<reference path="../../lib/phaser.d.ts"/>
 var config = {
     type: Phaser.AUTO,
     width: 800,
@@ -139,10 +140,12 @@ var config = {
 };
 var game = new Phaser.Game(config);
 function preload() {
-    this.load.image('sky', 'assets/sky.png');
 }
 function create() {
-    this.add.image(400, 300, 'sky');
+    this.formUtil.scaleToGameW("heros-button", .25);
+    this.formUtil.placeElementAt(101, "heros-button");
+    this.formUtil.scaleToGameW("equipements-button", .25);
+    this.formUtil.placeElementAt(107, "equipements-button");
 }
 function update() {
 }

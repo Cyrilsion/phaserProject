@@ -9,9 +9,18 @@
 #liste{
 	
 	left: 850px;
-	top: 50px;
+	top: 150px;
 	position: absolute;
 	width: 300px;
 	height: 500px;
 	
+}
+#entete{
+
+	left: 850px;
+	top: 50px;
+	position: absolute;
+	width: 300px;
+	height: 100px;
+
 }

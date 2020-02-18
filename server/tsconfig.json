@@ -9,7 +9,7 @@
     "outFile": "./dist/bundle.js"
   },
   "include": [
-    "./src/*.ts",
-    "./lib/phaser/types/phaser.d.ts"
+    "./src/*.ts", 
+    "./src/scenes/*.ts"
   ]
 }

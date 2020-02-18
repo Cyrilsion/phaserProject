@@ -1,5 +1,5 @@
 cd dist
 rm *
-cd ../src
+cd ..
 tsc
 
