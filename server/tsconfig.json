@@ -11,5 +11,11 @@
   "include": [
     "./src/*.ts", 
     "./src/scenes/*.ts"
-  ]
+  ],
+  "typeRoots": [
+    "./lib/*.ts"
+],
+  "types": [
+    "Phaser"
+]
 }

@@ -1,9 +1,10 @@
 class Hero {
-    name: string;
-    attaque: number;
-    pdv: number;
-    experience: number;
-    level: number;
+    private name: string;
+    private attaque: number;
+    private pdv: number;
+    private experience: number;
+    private level: number;
+    private placement: Coordonnees;
 
     constructor(name: string) {
         this.name = name;
@@ -11,6 +12,7 @@ class Hero {
         this.pdv = 100;
         this.experience = 0;
         this.level = 0;
+        this.placement = new Coordonnees();
     }
     
     getName():string {
@@ -37,5 +39,11 @@ class Hero {
             this.level++;
             this.experience = 0;
         }
+    }
+    setPlacement(x: number, y: number) {
+        this.placement.setCoordonnees(x, y);
+    }
+    getPlacement(): Coordonnees {
+        return this.placement;
     }
   }

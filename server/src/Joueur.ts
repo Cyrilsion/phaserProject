@@ -1,11 +1,9 @@
 class Joueur {
-    name: string;
+    private name: string;
     inventaire: Inventaire;
-    composition: Composition;
     
-    constructor(name: string, inventaire: Inventaire, composition: Composition) {
+    constructor(name: string) {
         this.name = name;
-        this.composition = composition;
-        this.inventaire = inventaire;
+        this.inventaire = new Inventaire();
     }
 }
