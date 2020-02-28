@@ -1,28 +1,32 @@
 #visuel{
 
-	width: 1600px;
-	height: 900px;
+	width: 1400px;
+	height: 1000px;
 	position: absolute;
 	
 }
 
+#menucombat{
+	display: none;
+}
+
 #entete{
 
-	left: 1650px;
+	left: 1410px;
 	position: absolute;
-	width: 500px;
+	width: 450px;
 	height: 50px;
 
 }
 
 #liste{
 	
-	left: 1650px;
+	left: 1410px;
 	top: 100px;
 	position: absolute;
-	width: 500px;
+	width: 450px;
 	height: 500px;
-	
+	padding-left: 50px;
 }
 
 .bouton{

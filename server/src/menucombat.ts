@@ -1,7 +1,12 @@
-const largeurCase: number = 102;
-const longueurCase: number = 75;
-const hauteurHero = 130;
-const largeurHero = 60;
+const tailleHero: number = 130;
+const xGauche: number = 175;
+const xDroite: number = 1250;
+const yHaut: number = 305;
+const yBas: number = 610;
+const reserveHaut: number = 620;
+const reserveBas: number = 715;
+const largeurCase: number = (xDroite - xGauche)/8;
+const longueurCase: number = (yBas - yHaut)/3;
 var currentHero: string;
 ///Chargement de l'inventaire
 var joueur: Joueur = new Joueur("Cyrkill");
@@ -38,16 +43,15 @@ joueur.inventaire.getEquipements().forEach(addElement);
 /////////
 
 //////drag and drop de la liste sur notre visuel
-var currentElement;
 document.getElementById("visuel").addEventListener('dragover', function(e) {
     e.preventDefault();
 });
 document.getElementById("visuel").addEventListener('drop', function(e) {
     var hero = joueur.inventaire.getHeros().get(currentHero);
-    if(e.offsetX > 115 && e.offsetX < 930 && e.offsetY > 225 && e.offsetY < 450)   {
-        hero.setPlacement(Math.trunc(e.offsetX/largeurCase), Math.trunc(e.offsetY/longueurCase));
+    if(e.offsetX > xGauche && e.offsetX < xDroite && e.offsetY > yHaut && e.offsetY < yBas)   {
+        hero.setPlacement(Math.trunc((e.offsetX - xGauche)/largeurCase), Math.trunc((e.offsetY - yHaut)/longueurCase));
     }
-    else if(e.offsetY > 460 && e.offsetY < 530) {
+    else if(e.offsetY > reserveHaut && e.offsetY < reserveBas) {
         hero.setPlacement(10, 10);
     }
     spawnHero(hero.getName(), hero.getPlacement().getX(), hero.getPlacement().getY());
