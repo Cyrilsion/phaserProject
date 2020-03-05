@@ -21,6 +21,7 @@ html = """<!DOCTYPE html>
 		</div>
 		<div id = "liste">
 		</div>
+		<button id = "valider" onClick="fight()">Valider</button>
 	</div>
 	<script type="text/javascript" src="./lib/phaser-custom.min.js"></script>
 	<script type="text/javascript" src="./dist/bundle.js"></script>

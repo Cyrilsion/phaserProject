@@ -29,6 +29,14 @@
 	padding-left: 50px;
 }
 
+#valider{
+
+	left: 1410px;
+	top: 650px;
+	position: absolute;
+
+}
+
 .bouton{
 	float: left;
 	text-align: center;

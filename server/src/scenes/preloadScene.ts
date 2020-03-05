@@ -1,10 +1,11 @@
 ///<reference path="../../lib/phaser.d.ts"/>
-var game: any;
-var scene: any;
+var game: Phaser.Game;
+var scene: Phaser.Scene;
 var player: any;
 var cursors: any;
 var controls;
 var readyCount: number;
+var heroespriteMap: Map<string, Phaser.Physics.Arcade.Sprite>;
 window.onload = function() {
     var config = {
         type: Phaser.AUTO,
@@ -21,10 +22,10 @@ window.onload = function() {
 
     game = new Phaser.Game(config);
     game.scene.start("preloadScene");
+    
 }
 
 class preloadScene extends Phaser.Scene{
-
     constructor(){
         super({key: 'preloadScene' });
         scene = this;
@@ -96,7 +97,7 @@ class preloadScene extends Phaser.Scene{
         });
  
         // load assets needed in our game
-
+        heroespriteMap = new Map<string, Phaser.Physics.Arcade.Sprite>();
         this.load.image('tiles', './assets/tilemap/tmw_desert_spacing.png');
         this.load.tilemapTiledJSON('map', './assets/tilemap/carte.json');
         this.load.image('player', './assets/tilemap/tank.png');
@@ -122,6 +123,7 @@ class preloadScene extends Phaser.Scene{
         this.load.image('troll','./assets/heroes/troll.png');
         this.load.image('werewolf','./assets/heroes/werewolf.png');
         this.load.image('woruc','./assets/heroes/woruc.png');
+        this.load.image('groof','./assets/heroes/woruc.png');
        
     }
     

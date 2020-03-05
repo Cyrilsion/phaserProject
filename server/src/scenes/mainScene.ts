@@ -21,7 +21,7 @@ class mainScene extends Phaser.Scene{
 
         var layer = map.createStaticLayer(0, tiles, 0, 0);
 
-        player = this.physics.add.sprite(100, game.config.height / 2, 'player'); 
+        player = this.physics.add.sprite(100, 300, 'player'); 
 
         cursors = this.input.keyboard.createCursorKeys(); 
 
@@ -46,7 +46,7 @@ class mainScene extends Phaser.Scene{
             player.setVelocityY(moveAmt);
         if(toucheMenuCombat.isDown) {
             document.getElementById("menucombat").style.display = "block";
-            game.scene.start("menuCombatScene");
+            this.scene.start("menuCombatScene");
         }
            
     }
