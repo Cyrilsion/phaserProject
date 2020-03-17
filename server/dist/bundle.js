@@ -14,12 +14,71 @@ class Coordonnees {
         return this.y;
     }
 }
-class Equipement {
+class Equipement extends Phaser.Physics.Arcade.Sprite {
+    constructor(scene, x, y, name, valeur) {
+        super(scene, x, y, name);
+        scene.add.existing(this);
+        this.valeur = valeur;
+        this.owner = null;
+        this.setInteractif(false, scene);
+    }
+    getValeur() {
+        return this.valeur;
+    }
+    getOwner() {
+        return this.owner;
+    }
+    setInteractif(bool, scene) {
+        this.setVisible(bool);
+        this.setActive(bool);
+        if (bool == true) {
+            this.setInteractive();
+            scene.input.setDraggable(this, bool);
+            this.on('drag', function (pointer, GameObjects, dragX, dragY) {
+                this.setX(pointer.x);
+                this.setY(pointer.y);
+            }, this);
+            this.on('dragend', function (pointer, gameObject) {
+                let hero = j.inventaire.getHeros().find(e => e.getPlacement().getX() == this.getCoordonnees(pointer.x, pointer.y).getX() && e.getPlacement().getY() == this.getCoordonnees(pointer.x, pointer.y).getY());
+                if (hero != undefined) {
+                    hero.setEquipement(this);
+                    this.owner = hero;
+                    this.setScale(0.4);
+                }
+            }, this);
+        }
+        else {
+            this.disableInteractive();
+        }
+    }
+    getCoordonnees(x, y) {
+        let xy = new Coordonnees();
+        let offsetX = ((xGaucheBas - xGaucheHaut) * (yBas - y)) / (yHaut - yBas);
+        let largeurCase = ((xDroiteBas - xGaucheBas) - (offsetX * 2)) / 8;
+        if (x > (xGaucheBas + offsetX) && x < (xDroiteBas - offsetX) && y > yHaut && y < yBas)
+            xy.setCoordonnees(Math.trunc((x - (xGaucheBas + offsetX)) / largeurCase), findY(y));
+        else
+            xy.setCoordonnees(10, j.inventaire.getHeros().length);
+        return xy;
+    }
+}
+class Arme extends Equipement {
+    constructor(scene, x, y, name, valeur) {
+        super(scene, x, y, name, valeur);
+    }
+}
+class Armure extends Equipement {
+    constructor(scene, x, y, name, valeur) {
+        super(scene, x, y, name, valeur);
+    }
+}
+class EquipementFromJson {
     constructor(name, type, propriete, valeur) {
         this.name = name;
         this.type = type;
         this.propriete = propriete;
         this.valeur = valeur;
+        this.selected = false;
     }
     getName() {
         return this.name;
@@ -33,41 +92,66 @@ class Equipement {
     getValeur() {
         return this.valeur;
     }
+    getCout() {
+        return this.cout;
+    }
 }
-class Character {
-    constructor(name) {
-        this.name = name;
-        this.attaque = 10;
-        this.countAttack = 0;
-        this.pdv = 100;
+class Character extends Phaser.Physics.Arcade.Sprite {
+    constructor(scene, name, attaque, pdv, range, vitesse) {
+        super(scene, 200 + (j.inventaire.getHeros().length * 117), 670, name);
+        this.scene.physics.world.enableBody(this, 0);
+        scene.add.existing(this);
+        this.setName(name);
+        this.currentPosition = new Coordonnees();
         this.placement = new Coordonnees();
+        this.setPlacement(j.inventaire.getHeros().length, 0);
+        this.attaque = attaque;
+        this.countAttack = 0;
+        this.pdv = pdv;
         this.placed = false;
-        this.range = 1;
+        this.range = range;
         this.target = null;
         this.direction = null;
-        this.vitesse = 1;
+        this.vitesse = vitesse;
         this.lifeBar = null;
+        this.setInteractif(false, scene);
+    }
+    setInteractif(bool, scene) {
+        this.setVisible(bool);
+        this.setActive(bool);
+        if (bool == true) {
+            this.setInteractive();
+            scene.input.setDraggable(this, bool);
+            this.on('drag', function (pointer, GameObjects, dragX, dragY) {
+                this.setX(pointer.x);
+                this.setY(pointer.y);
+            });
+            this.on('dragend', function (pointer, gameObject) {
+                this.setPlacement(this.getCoordonnees(pointer.x, pointer.y).getX(), this.getCoordonnees(pointer.x, pointer.y).getY());
+            });
+        }
+        else {
+            this.disableInteractive();
+        }
     }
     getName() {
         return this.name;
     }
-    getAttaque() {
-        return this.attaque;
+    getDirection() {
+        return this.direction;
     }
     getPdv() {
         return this.pdv;
     }
-    getVitesse() {
-        return this.vitesse;
-    }
     getRange() {
         return this.range;
     }
-    getDirection() {
-        return this.direction;
+    getVitesse() {
+        return this.vitesse;
     }
     attacked(attaque) {
         this.pdv = this.pdv - attaque;
+        alert(this.pdv);
         this.redrawLifebar();
         if (this.pdv <= 0) {
             this.pdv = 0;
@@ -81,23 +165,42 @@ class Character {
             this.countAttack++;
         }
     }
+    getCoordonnees(x, y) {
+        let xy = new Coordonnees();
+        let offsetX = ((xGaucheBas - xGaucheHaut) * (yBas - y)) / (yHaut - yBas);
+        let largeurCase = ((xDroiteBas - xGaucheBas) - (offsetX * 2)) / 8;
+        if (x > (xGaucheBas + offsetX) && x < (xDroiteBas - offsetX) && y > yHaut && y < yBas)
+            xy.setCoordonnees(Math.trunc((x - (xGaucheBas + offsetX)) / largeurCase), findY(y));
+        else
+            xy.setCoordonnees(10, j.inventaire.getHeros().length);
+        return xy;
+    }
+    setEquipement(element) {
+        this.arme = element;
+        element.setScale(0.1);
+        this.attaque = this.attaque + this.arme.getValeur();
+    }
     setDirection(direction) {
-        if (direction != null) {
-            switch (direction) {
-                case 0:
-                    casesArene[this.getPlacement().getX() - 1][this.getPlacement().getY()] = true;
-                    break;
-                case 1:
-                    casesArene[this.getPlacement().getX()][this.getPlacement().getY() - 1] = true;
-                    break;
-                case 2:
-                    casesArene[this.getPlacement().getX() + 1][this.getPlacement().getY()] = true;
-                    break;
-                case 3:
-                    casesArene[this.getPlacement().getX()][this.getPlacement().getY() + 1] = true;
-                    break;
-            }
-            casesArene[this.getPlacement().getX()][this.getPlacement().getY()] = false;
+        switch (direction) {
+            case null:
+                casesArene[this.getPosition().getX()][this.getPosition().getY()] = true;
+                break;
+            case 0:
+                casesArene[this.getPosition().getX() - 1][this.getPosition().getY()] = true;
+                casesArene[this.getPosition().getX()][this.getPosition().getY()] = false;
+                break;
+            case 1:
+                casesArene[this.getPosition().getX()][this.getPosition().getY() - 1] = true;
+                casesArene[this.getPosition().getX()][this.getPosition().getY()] = false;
+                break;
+            case 2:
+                casesArene[this.getPosition().getX() + 1][this.getPosition().getY()] = true;
+                casesArene[this.getPosition().getX()][this.getPosition().getY()] = false;
+                break;
+            case 3:
+                casesArene[this.getPosition().getX()][this.getPosition().getY() + 1] = true;
+                casesArene[this.getPosition().getX()][this.getPosition().getY()] = false;
+                break;
         }
         if (direction != null && direction < 0)
             direction = 3;
@@ -105,22 +208,22 @@ class Character {
             direction = 0;
         this.direction = direction;
     }
-    setPlacement(x, y) {
-        if (this.placed == false)
-            casesArene[x][y] = true;
-        alert("x : " + x + "y : " + y);
-        this.placed = true;
-        this.placement.setCoordonnees(x, y);
-        this.redrawLifebar();
-    }
-    removeFromBattle() {
-        this.placed = false;
-        this.direction = null;
-        this.target = null;
-        casesArene[this.getPlacement().getX()][this.getPlacement().getY()] = false;
-    }
     getPlacement() {
         return this.placement;
+    }
+    setPlacement(x, y) {
+        this.placement.setCoordonnees(x, y);
+        if (y != 0)
+            this.setScale(1 - (5 - this.getPlacement().getY()) * 0.05);
+    }
+    setCurrentPosition(x, y) {
+        if (x >= 0 && x <= 7 && y >= 0 && y <= 7) {
+            this.currentPosition.setCoordonnees(x, y);
+        }
+        this.setScale(1 - (5 - this.getPosition().getY()) * 0.1);
+    }
+    getPosition() {
+        return this.currentPosition;
     }
     setTarget(character) {
         this.target = character;
@@ -128,31 +231,39 @@ class Character {
     getTarget() {
         return this.target;
     }
-    isInRange() {
-        return this.finalDestination(this.getPlacement().getX(), this.getPlacement().getY());
+    removeFromBattle() {
+        casesArene[this.getPosition().getX()][this.getPosition().getY()] = false;
+        this.placed = false;
+        this.countAttack = 0;
+        this.direction = null;
+        this.target = null;
+        this.currentPosition = this.placement;
+        this.lifeBar.setVisible(false);
     }
-    finalDestination(x, y) {
-        switch (this.getTarget().getDirection()) {
-            case null:
-                if ((Math.abs(x - this.getTarget().getPlacement().getX()) + Math.abs(y - this.getTarget().getPlacement().getY())) <= this.getRange())
-                    return true;
-                break;
-            case 0:
-                if ((Math.abs(x - (this.getTarget().getPlacement().getX() - 1)) + Math.abs(y - this.getTarget().getPlacement().getY())) <= this.getRange())
-                    return true;
-                break;
-            case 1:
-                if ((Math.abs(x - this.getTarget().getPlacement().getX()) + Math.abs(y - (this.getTarget().getPlacement().getY() - 1))) <= this.getRange())
-                    return true;
-                break;
-            case 2:
-                if ((Math.abs(x - (this.getTarget().getPlacement().getX() + 1)) + Math.abs(y - this.getTarget().getPlacement().getY())) <= this.getRange())
-                    return true;
-                break;
-            case 3:
-                if ((Math.abs(x - this.getTarget().getPlacement().getX()) + Math.abs(y - (this.getTarget().getPlacement().getY() + 1))) <= this.getRange())
-                    return true;
-                break;
+    isInRange(x, y) {
+        if (this.getTarget() != null) {
+            switch (this.getTarget().getDirection()) {
+                case null:
+                    if ((Math.abs(x - this.getTarget().getPosition().getX()) + Math.abs(y - this.getTarget().getPosition().getY())) <= this.range)
+                        return true;
+                    break;
+                case 0:
+                    if ((Math.abs(x - (this.getTarget().getPosition().getX() - 1)) + Math.abs(y - this.getTarget().getPosition().getY())) <= this.range)
+                        return true;
+                    break;
+                case 1:
+                    if ((Math.abs(x - this.getTarget().getPosition().getX()) + Math.abs(y - (this.getTarget().getPosition().getY() - 1))) <= this.range)
+                        return true;
+                    break;
+                case 2:
+                    if ((Math.abs(x - (this.getTarget().getPosition().getX() + 1)) + Math.abs(y - this.getTarget().getPosition().getY())) <= this.range)
+                        return true;
+                    break;
+                case 3:
+                    if ((Math.abs(x - this.getTarget().getPosition().getX()) + Math.abs(y - (this.getTarget().getPosition().getY() + 1))) <= this.range)
+                        return true;
+                    break;
+            }
         }
         return false;
     }
@@ -164,16 +275,16 @@ class Character {
         if (this.lifeBar != null) {
             this.lifeBar.clear();
             this.lifeBar.fillStyle(0xe66a28, 1);
-            this.lifeBar.fillRect(heroespriteMap.get(this.getName()).getTopLeft().x, heroespriteMap.get(this.getName()).getTopLeft().y + 10, heroespriteMap.get(this.getName()).width * (this.pdv / 100), 15);
+            this.lifeBar.fillRect(this.getTopLeft().x, this.getTopLeft().y - 30, this.width * (this.pdv / listeheros.find(e => e.getName().localeCompare(this.getName()) == 0).getPdv()) / 2, 15);
             this.lifeBar.lineStyle(2, 0xffffff);
-            this.lifeBar.strokeRect(heroespriteMap.get(this.getName()).getTopLeft().x, heroespriteMap.get(this.getName()).getTopLeft().y + 10, heroespriteMap.get(this.getName()).width, 15);
+            this.lifeBar.strokeRect(this.getTopLeft().x, this.getTopLeft().y - 30, this.width / 2, 15);
             this.lifeBar.setDepth(1);
         }
     }
 }
 class Hero extends Character {
-    constructor(name) {
-        super(name);
+    constructor(scene, name, attaque, pdv) {
+        super(scene, name, attaque, pdv, 1, 1);
         this.experience = 0;
         this.level = 0;
     }
@@ -195,8 +306,33 @@ class Hero extends Character {
     }
 }
 class Ennemy extends Character {
-    constructor(name) {
-        super(name);
+    constructor(scene, name, attaque, pdv) {
+        super(scene, name, attaque, pdv, 1, 1);
+    }
+}
+class HerofromJson {
+    constructor(name, attaque, pdv, valeur) {
+        this.name = name;
+        this.attaque = attaque;
+        this.pdv = pdv;
+        this.level = 1;
+        this.valeur = valeur;
+        this.selected = false;
+    }
+    getName() {
+        return this.name;
+    }
+    getAttaque() {
+        return this.attaque;
+    }
+    getPdv() {
+        return this.pdv;
+    }
+    getLevel() {
+        return this.level;
+    }
+    getValeur() {
+        return this.valeur;
     }
 }
 class Inventaire {
@@ -217,12 +353,11 @@ class Inventaire {
     addPopulation(increase) {
         this.population += increase;
     }
-    addHero(name) {
-        var hero = new Hero(name);
+    addHero(hero) {
         this.heros.push(hero);
     }
-    addEquipement(name, type, propriete, valeur) {
-        var equipement = new Equipement(name, type, propriete, valeur);
+    addEquipement(scene, x, y, name, valeur) {
+        var equipement = new Equipement(scene, x, y, name, valeur);
         this.equipements.push(equipement);
     }
 }
@@ -230,184 +365,28 @@ class Joueur {
     constructor(name) {
         this.name = name;
         this.inventaire = new Inventaire();
+        this.or = 50;
     }
-}
-const tailleHero = 130;
-const xGaucheBas = 150;
-const xDroiteBas = 1265;
-const xGaucheHaut = 265;
-const xDroiteHaut = 1150;
-const yHaut = 70;
-const yBas = 610;
-const reserveHaut = 620;
-const reserveBas = 715;
-const longeurCaseBase = 110;
-const largeurCaseBase = 140;
-var currentHero;
-var joueur;
-var ennemies = [];
-var ready = false;
-var casesArene;
-casesArene = new Array(8);
-for (let i = 0; i <= 7; i++) {
-    casesArene[i] = new Array(false, false, false, false, false, false);
-}
-ennemies.push(new Ennemy("groof"));
-ennemies.find(e => e.getName().localeCompare("groof") == 0).setPlacement(1, 2);
-joueur = new Joueur("Cyrkill");
-joueur.inventaire.addHero("beast");
-joueur.inventaire.addHero("brigand");
-joueur.inventaire.addHero("dwarf");
-joueur.inventaire.addHero("elzak");
-joueur.inventaire.addHero("ghoul");
-joueur.inventaire.addHero("giant");
-joueur.inventaire.addHero("goblin");
-joueur.inventaire.addHero("goblin_bow");
-joueur.inventaire.addHero("grolf");
-joueur.inventaire.addHero("hobgoblin");
-joueur.inventaire.addHero("lich");
-joueur.inventaire.addHero("moriko");
-joueur.inventaire.addHero("mummy");
-joueur.inventaire.addHero("necromancer");
-joueur.inventaire.addHero("skeleton_pirate");
-joueur.inventaire.addHero("traveller");
-joueur.inventaire.addHero("trog");
-joueur.inventaire.addHero("troll");
-joueur.inventaire.addHero("werewolf");
-joueur.inventaire.addHero("woruc");
-joueur.inventaire.addEquipement("apocalyptic sword", "sword", "attaque", 10);
-///Chargement de l'inventaire
-function chargement() {
-    temps = 0;
-    ///Suppression des éléments actuels
-    removeElements();
-    ///Affichage des héros dans la liste
-    joueur.inventaire.getHeros().forEach(addElement);
-    ennemies.forEach(spawnCharacter);
-    ///Affichage des equipements dans la liste
-    joueur.inventaire.getEquipements().forEach(addElement);
-}
-//////drag and drop de la liste sur notre visuel
-document.getElementById("visuel").addEventListener('dragover', function (e) {
-    e.preventDefault();
-});
-document.getElementById("visuel").addEventListener('drop', function (e) {
-    var hero = joueur.inventaire.getHeros().find(e => e.getName().localeCompare(currentHero) == 0);
-    var offsetX = ((xGaucheBas - xGaucheHaut) * (yBas - e.offsetY)) / (yHaut - yBas);
-    if (e.offsetX > (xGaucheBas + offsetX) && e.offsetX < (xDroiteBas - offsetX) && e.offsetY > yHaut && e.offsetY < yBas) {
-        var largeurCase = ((xDroiteBas - xGaucheBas) - (offsetX * 2)) / 8;
-        hero.setPlacement(Math.trunc((e.offsetX - (xGaucheBas + offsetX)) / largeurCase), findY(e.offsetY));
+    getor() {
+        return this.or;
     }
-    else if (e.offsetY > reserveHaut && e.offsetY < reserveBas) {
-        hero.setPlacement(10, 10);
+    subGold(decrease) {
+        this.or -= decrease;
     }
-    spawnCharacter(hero, 0);
-});
-////////
-function findY(offsetY) {
-    if (offsetY > 500)
-        return 5;
-    else if (offsetY > 400)
-        return 4;
-    else if (offsetY > 310)
-        return 3;
-    else if (offsetY > 225)
-        return 2;
-    else if (offsetY > 145)
-        return 1;
-    else
-        return 0;
-}
-function findCentreY(y) {
-    if (y == 5)
-        return 555;
-    else if (y == 4)
-        return 450;
-    else if (y == 3)
-        return 355;
-    else if (y == 2)
-        return 270;
-    else if (y == 1)
-        return 185;
-    else if (y == 0)
-        return 110;
-    else
-        return 660;
-}
-function selection(name) {
-    ////gerer les boutons de l'entete
-    var elements = document.getElementsByClassName("bouton");
-    for (var i = 0; i < elements.length; i++) {
-        elements[i].style.width = "25%";
-        elements[i].style.height = "80%";
-    }
-    var element = document.getElementById(name + "-button");
-    element.style.width = "50%";
-    element.style.height = "100%";
-    /////////
-    ////gerer l'affichage
-    var elementsToHide = document.getElementById('liste').lastElementChild;
-    while (elementsToHide) {
-        if (elementsToHide.className == name) {
-            elementsToHide.style.display = "block";
-        }
-        else {
-            elementsToHide.style.display = "none";
-        }
-        elementsToHide = elementsToHide.previousElementSibling;
-    }
-    /////////
-}
-function removeElements() {
-    var elementsTocheck = document.getElementById('liste').lastElementChild;
-    while (elementsTocheck) {
-        document.getElementById('liste').removeChild(elementsTocheck);
-        elementsTocheck = elementsTocheck.previousElementSibling;
-    }
-}
-function addElement(element, index) {
-    var newElement = document.createElement('a');
-    newElement.draggable = true;
-    newElement.style.display = "none";
-    var newTextElement;
-    if (element instanceof Hero) {
-        newElement.className = "heros";
-        newElement.addEventListener('dragstart', function (e) {
-            e.dataTransfer.setData('text/plain', '');
-            currentHero = newElement.textContent;
-        });
-        newTextElement = document.createTextNode(element.getName());
-    }
-    else if (element instanceof Equipement) {
-        newElement.className = "equipements";
-        newTextElement = document.createTextNode(element.getName() + ' : ' + element.getType() + "  +" + element.getValeur() + ' ' + element.getPropriete());
-    }
-    newElement.appendChild(newTextElement);
-    document.getElementById('liste').appendChild(newElement);
-}
-function fight() {
-    if (ready == false) {
-        // heroespriteMap.forEach(e => e.setVisible(true));
-        ennemies.filter(e => e.placed == true).forEach(e => e.initLifeBar(scene.add.graphics()));
-        joueur.inventaire.getHeros().filter(e => e.placed == true).forEach(e => e.initLifeBar(scene.add.graphics()));
-        ennemies.filter(e => e.placed == true).forEach(findTarget);
-        joueur.inventaire.getHeros().filter(e => e.placed == true).forEach(findTarget);
-        ready = true;
-    }
-    else {
-        //reset tout
-        //heroespriteMap.forEach(e => e.setVisible(false));
-        ennemies.filter(e => e.placed == true).forEach(e => e.removeFromBattle());
-        joueur.inventaire.getHeros().filter(e => e.placed == true).forEach(e => e.removeFromBattle());
-        ready = false;
+    printInventaire() {
+        this.inventaire.getHeros().forEach((e) => console.log(e.getName()));
     }
 }
 ///<reference path="../../lib/phaser.d.ts"/>
+///<reference path="../../lib/phaser.d.ts"/>
 var toucheMenuCombat;
+var toucheouvrirboutique;
+var olayer;
+var shoplayer;
+var bglayer;
 class mainScene extends Phaser.Scene {
     constructor() {
         super({ key: 'mainScene' });
-        scene = this;
     }
     preload() {
     }
@@ -415,11 +394,25 @@ class mainScene extends Phaser.Scene {
         this.cameras.main.setBounds(0, 0, 3200, 3200);
         var map = this.make.tilemap({ key: 'map' });
         var tiles = map.addTilesetImage('tmw_desert_spacing', 'tiles');
-        var layer = map.createStaticLayer(0, tiles, 0, 0);
-        player = this.physics.add.sprite(100, 300, 'player');
+        var shop = map.addTilesetImage('shopicon', 'shop');
+        bglayer = map.createStaticLayer('backgroundlayer', tiles, 0, 0);
+        olayer = map.createStaticLayer('obstaclelayer', tiles, 0, 0);
+        shoplayer = map.createStaticLayer('shoplayer', shop, 0, 0);
+        player = this.physics.add.sprite(100, 200, 'player');
         cursors = this.input.keyboard.createCursorKeys();
         toucheMenuCombat = this.input.keyboard.addKey('C');
+        toucheouvrirboutique = this.input.keyboard.addKey('B');
         this.cameras.main.startFollow(player);
+        olayer.setCollisionBetween(1, 50);
+        this.physics.add.collider(player, olayer);
+        this.cache.json.get('herodata');
+        shoplayer.setTileIndexCallback(49, function () {
+            if (toucheouvrirboutique.isDown) {
+                this.scene.pause('mainScene');
+                this.scene.launch("shopScene");
+            }
+        }, this);
+        this.physics.add.overlap(player, shoplayer);
     }
     update() {
         const moveAmt = 200;
@@ -433,92 +426,132 @@ class mainScene extends Phaser.Scene {
         if (cursors.down.isDown)
             player.setVelocityY(moveAmt);
         if (toucheMenuCombat.isDown) {
-            document.getElementById("menucombat").style.display = "block";
             this.scene.start("menuCombatScene");
         }
     }
 }
 ///<reference path="../../lib/phaser.d.ts"/>
-var toucheRetour;
+const tailleHero = 130;
+const xGaucheBas = 150;
+const xDroiteBas = 1265;
+const xGaucheHaut = 265;
+const xDroiteHaut = 1150;
+const yHaut = 70;
+const yBas = 610;
+const reserveHaut = 620;
+const reserveBas = 715;
+const reserveGauche = 140;
+const reserveDroite = 1200;
+const longeurCaseBase = 110;
+const largeurCaseBase = 140;
 var temps;
+var ennemies = [];
+var ready;
+var casesArene;
 class menuCombatScene extends Phaser.Scene {
     constructor() {
         super({ key: 'menuCombatScene' });
-        scene = this;
     }
     preload() {
-    }
-    create() {
         this.add.image(0, 0, 'font').setOrigin(0, 0);
         this.add.image(0, 0, 'arene').setOrigin(0, 0);
-        toucheRetour = this.input.keyboard.addKey('V');
-        chargement();
+        casesArene = new Array(8);
+        for (let i = 0; i <= 7; i++) {
+            casesArene[i] = new Array(false, false, false, false, false, false);
+        }
+    }
+    create() {
         ready = false;
+        let i = 0;
+        listeheros.filter(e => e.selected == true).forEach(e => j.inventaire.addHero(new Hero(this, e.getName(), e.getAttaque(), e.getPdv())));
+        listeEquipement.filter(e => e.selected == true).forEach(e => j.inventaire.addEquipement(this, 1200, 500, e.getName(), e.getValeur()));
+        ennemies.push(new Ennemy(this, 'dwarf', listeheros.find(e => e.getName().localeCompare('dwarf') == 0).getAttaque(), listeheros.find(e => e.getName().localeCompare('dwarf') == 0).getPdv()));
+        j.inventaire.getHeros().forEach(e => e.setInteractif(true, this));
+        ennemies.forEach(e => e.setInteractif(true, this));
+        j.inventaire.getEquipements().forEach(e => e.setInteractif(true, this));
+        temps = 0;
+        var TxtReady = this.add.text(1250, 650, 'READY', { fill: '#FF0000', backgroundColor: '#000000' });
+        TxtReady.setInteractive();
+        TxtReady.on('pointerdown', function () { ready = true; });
     }
     update() {
-        if (toucheRetour.isDown) {
-            temps = 0;
-            document.getElementById("menucombat").style.display = "none";
-            this.scene.start("mainScene");
-        }
+        j.inventaire.getEquipements().filter(e => e.getOwner() != null).forEach(e => e.setX(e.getOwner().getCenter().x) && e.setY(e.getOwner().getTopCenter().y - 10));
         if (ready == true) {
             temps = temps + 0.02;
+            //une fois au debut
+            if (temps <= 0.02) {
+                //on place definitivement et on enleve le drag and drop
+                ennemies.forEach(function (e) {
+                    e.setCurrentPosition(e.getPlacement().getX(), e.getPlacement().getY());
+                    e.placed = true;
+                });
+                j.inventaire.getHeros().forEach(function (e) {
+                    e.setCurrentPosition(e.getPlacement().getX(), e.getPlacement().getY());
+                    e.placed = true;
+                });
+                //on instancie les barres de vie
+                ennemies.filter(e => e.placed == true).forEach(e => e.initLifeBar(this.add.graphics()));
+                j.inventaire.getHeros().filter(e => e.placed == true).forEach(e => e.initLifeBar(this.add.graphics()));
+                ///on trouve la premiere cible
+                ennemies.filter(e => e.placed == true).forEach(findTarget);
+                j.inventaire.getHeros().filter(e => e.placed == true).forEach(findTarget);
+            }
             ennemies.filter(e => e.placed == true).forEach(updateCoordonnes);
-            joueur.inventaire.getHeros().filter(e => e.placed == true).forEach(updateCoordonnes);
-            ennemies.filter(e => e.placed == true).forEach(attack);
-            joueur.inventaire.getHeros().filter(e => e.placed == true).forEach(attack);
+            j.inventaire.getHeros().filter(e => e.placed == true).forEach(updateCoordonnes);
+            ennemies.filter(e => e.placed == true && e.isInRange(e.getPosition().getY(), e.getPosition().getY()) == true).forEach(character => character.attack(temps));
+            j.inventaire.getHeros().filter(e => e.placed == true && e.isInRange(e.getPosition().getY(), e.getPosition().getY()) == true).forEach(character => character.attack(temps));
+            //s'il ne reste plus d'ennemis places en vie
+            if (ennemies.some(e => e.placed == true && e.getPdv() != 0) == false) {
+                j.inventaire.getHeros().forEach(e => e.removeFromBattle());
+                ready = false;
+                alert("Victoire!!");
+                this.scene.start("mainScene");
+            }
+            //s'il ne reste plus de heros places en vie
+            else if (j.inventaire.getHeros().some(e => e.placed == true && e.getPdv() != 0) == false) {
+                ennemies.forEach(e => e.removeFromBattle());
+                ready = false;
+                alert("Défaite!!");
+                this.scene.start("mainScene");
+            }
         }
     }
 }
-function spawnCharacter(character, index) {
-    if (character.getPlacement().getX() != 10) {
-        var offsetX = ((xGaucheBas - xGaucheHaut) * (yBas - findCentreY(character.getPlacement().getY()))) / (yHaut - yBas);
-        var largeurCase = ((xDroiteBas - xGaucheBas) - (2 * offsetX)) / 8;
-        heroespriteMap.set(character.getName(), scene.physics.add.sprite((xGaucheBas + offsetX) + (character.getPlacement().getX() * largeurCase) + (largeurCase / 2), findCentreY(character.getPlacement().getY()) - 20, character.getName()));
-        var sprite = heroespriteMap.get(character.getName());
-        sprite.setScale(1 - ((5 - character.getPlacement().getY()) * 0.05));
-    }
-    else
-        scene.add.image(120, 460, name);
-}
 function findTarget(character, index) {
-    var found = false;
-    var iterator;
     var element;
     var elements;
     if (character.placed == true) {
         if (character instanceof Ennemy) {
-            elements = joueur.inventaire.getHeros();
+            elements = j.inventaire.getHeros();
         }
         else if (character instanceof Hero) {
             elements = ennemies;
         }
         ///trouve premier à portée
-        element = elements.filter(e => e.placed == true).find(e => (Math.abs(character.getPlacement().getX() - e.getPlacement().getX()) + Math.abs(character.getPlacement().getY() - e.getPlacement().getY())) <= character.getRange());
+        element = elements.filter(e => e.placed == true).find(e => (Math.abs(character.getPosition().getX() - e.getPosition().getX()) + Math.abs(character.getPosition().getY() - e.getPosition().getY())) <= character.getRange());
         //si aucun a portee prend le plus proche
-        if (element == undefined)
+        if (element == undefined && elements.filter(e => e.placed == true).length != 0)
             element = elements.filter(e => e.placed == true).reduce((selectedTarget, triedTarget) => closerCharacter(selectedTarget, triedTarget, character));
         character.setTarget(element);
         if (character.getTarget() != null) {
-            alert(character.getName() + " : " + character.getTarget().getName());
-            if (character.isInRange() == false)
+            if (character.isInRange(character.getPosition().getX(), character.getPosition().getY()) == false)
                 diriger(character, character.getName());
         }
     }
 }
 function closerCharacter(selectedTarget, triedTarget, currentCharacter) {
-    if ((Math.abs(currentCharacter.getPlacement().getX() - triedTarget.getPlacement().getX()) + Math.abs(currentCharacter.getPlacement().getY() - triedTarget.getPlacement().getY())) < (Math.abs(currentCharacter.getPlacement().getX() - selectedTarget.getPlacement().getX()) + Math.abs(currentCharacter.getPlacement().getY() - selectedTarget.getPlacement().getY()))) {
+    if ((Math.abs(currentCharacter.getPosition().getX() - triedTarget.getPosition().getX()) + Math.abs(currentCharacter.getPosition().getY() - triedTarget.getPosition().getY())) < (Math.abs(currentCharacter.getPosition().getX() - selectedTarget.getPosition().getX()) + Math.abs(currentCharacter.getPosition().getY() - selectedTarget.getPosition().getY()))) {
         return triedTarget;
     }
     return selectedTarget;
 }
 function diriger(character, name) {
     if (character.placed == true && character.getTarget() != null) {
-        var offsetX = character.getTarget().getPlacement().getX() - character.getPlacement().getX();
-        var offsetY = character.getTarget().getPlacement().getY() - character.getPlacement().getY();
+        var offsetX = character.getTarget().getPosition().getX() - character.getPosition().getX();
+        var offsetY = character.getTarget().getPosition().getY() - character.getPosition().getY();
         var directionsInterdites = [false, false, false, false];
-        var x = character.getPlacement().getX();
-        var y = character.getPlacement().getY();
+        var x = character.getPosition().getX();
+        var y = character.getPosition().getY();
         ///redirige
         if (character.getDirection() != null) {
             switch (character.getDirection()) {
@@ -570,7 +603,7 @@ function diriger(character, name) {
         }
         else {
             // n'a plus de direction ou est bloque par obstacle
-            if (character.isInRange() == false) {
+            if (character.isInRange(character.getPosition().getX(), character.getPosition().getY()) == false) {
                 var i = 0;
                 while (directionsInterdites[i] == true && i <= 3)
                     i++;
@@ -586,115 +619,138 @@ function diriger(character, name) {
     }
 }
 function updateCoordonnes(character, index) {
-    var sprite = heroespriteMap.get(character.getName());
-    var x = sprite.getCenter().x;
-    var y = sprite.getCenter().y;
-    var directionsInterdites = [false, false, false, false];
-    var cX = character.getPlacement().getX();
-    var cY = character.getPlacement().getY();
+    var x = character.getCenter().x;
+    var y = character.getCenter().y;
+    var cX = character.getPosition().getX();
+    var cY = character.getPosition().getY();
     var offsetX = ((xGaucheBas - xGaucheHaut) * (yBas - y)) / (yHaut - yBas);
+    var changed = false;
+    character.redrawLifebar();
     if (character.getDirection() != null) {
-        ///check si la position est dans l'arene
+        ///check si la position est dans l'arene et si le perso est tjr en mouvements
         if (x > (xGaucheBas + offsetX) && x < (xDroiteBas - offsetX) && y > yHaut && y < yBas) {
             var largeurCase = ((xDroiteBas - xGaucheBas) - (offsetX * 2)) / 8;
-            ///changement de case
             switch (character.getDirection()) {
                 case 0:
-                    x = sprite.getRightCenter().x;
-                    y = sprite.getRightCenter().y;
+                    x = character.getRightCenter().x;
+                    y = character.getRightCenter().y;
+                    if ((cX - 1) == Math.trunc((x - (xGaucheBas + offsetX)) / largeurCase) && cY == findY(y))
+                        changed = true;
                     break;
                 case 1:
-                    x = sprite.getBottomCenter().x;
-                    y = sprite.getBottomCenter().y;
+                    x = character.getBottomCenter().x;
+                    y = character.getBottomCenter().y;
+                    if (cX == Math.trunc((x - (xGaucheBas + offsetX)) / largeurCase) && (cY - 1) == findY(y))
+                        changed = true;
                     break;
                 case 2:
-                    x = sprite.getLeftCenter().x;
-                    y = sprite.getLeftCenter().y;
+                    x = character.getLeftCenter().x;
+                    y = character.getLeftCenter().y;
+                    if ((cX + 1) == Math.trunc((x - (xGaucheBas + offsetX)) / largeurCase) && cY == findY(y))
+                        changed = true;
                     break;
                 case 3:
-                    x = sprite.getTopCenter().x;
-                    y = sprite.getTopCenter().y;
+                    x = character.getTopCenter().x;
+                    y = character.getTopCenter().y;
+                    if (cX == Math.trunc((x - (xGaucheBas + offsetX)) / largeurCase) && (cY + 1) == findY(y))
+                        changed = true;
                     break;
             }
-            if (cX != Math.trunc((x - (xGaucheBas + offsetX)) / largeurCase) || cY != findY(y)) {
+            ///changement de case
+            if (changed == true) {
                 //on assigne les coordonnees
-                character.setPlacement(Math.trunc((x - (xGaucheBas + offsetX)) / largeurCase), findY(y));
+                character.setCurrentPosition(Math.trunc((x - (xGaucheBas + offsetX)) / largeurCase), findY(y));
                 if (character.placed == true && character.getTarget() != null) {
-                    if (character.isInRange() == false) {
+                    if (character.isInRange(character.getPosition().getY(), character.getPosition().getY()) == false) {
                         //redirige si besoin
                         diriger(character, name);
                     }
                     else {
                         //attaquer
                         character.setDirection(null);
-                        heroespriteMap.get(character.getName()).setVelocity(0);
+                        character.setVelocity(0);
                     }
                 }
             }
             move(character, character.getName());
         }
     }
-}
-function attack(character, index) {
-    if (character.isInRange()) {
-        character.attack(temps);
+    //immobile
+    else {
+        let offsetX = ((xGaucheBas - xGaucheHaut) * (yBas - findCentreY(character.getPosition().getY()))) / (yHaut - yBas);
+        let largeurCase = ((xDroiteBas - xGaucheBas) - (2 * offsetX)) / 8;
+        character.setX((xGaucheBas + offsetX) + (character.getPosition().getX() * largeurCase) + (largeurCase / 2));
+        character.setY(findCentreY(character.getPosition().getY()) - 20);
     }
 }
 function move(character, name) {
     if (character.placed == true) {
-        if (character.getDirection() != null) {
-            heroespriteMap.get(name).setDrag(2000);
-            switch (character.getDirection()) {
-                case 0:
-                    heroespriteMap.get(name).setVelocityX(-200 * character.getVitesse());
-                    break;
-                case 1:
-                    heroespriteMap.get(name).setVelocityY(-200 * character.getVitesse());
-                    break;
-                case 2:
-                    heroespriteMap.get(name).setVelocityX(200 * character.getVitesse());
-                    break;
-                case 3:
-                    heroespriteMap.get(name).setVelocityY(100 * character.getVitesse());
-                    break;
-            }
-        }
-        //si arrete on le positionne correctement
-        else {
-            let offsetX = ((xGaucheBas - xGaucheHaut) * (yBas - findCentreY(character.getPlacement().getY()))) / (yHaut - yBas);
-            let largeurCase = ((xDroiteBas - xGaucheBas) - (2 * offsetX)) / 8;
-            heroespriteMap.get(name).setPosition((xGaucheBas + offsetX) + (character.getPlacement().getX() * largeurCase) + (largeurCase / 2), findCentreY(character.getPlacement().getY()) - 20);
+        character.setDrag(2000);
+        switch (character.getDirection()) {
+            case 0:
+                character.setVelocityX(-200 * character.getVitesse());
+                break;
+            case 1:
+                character.setVelocityY(-200 * character.getVitesse());
+                break;
+            case 2:
+                character.setVelocityX(200 * character.getVitesse());
+                break;
+            case 3:
+                character.setVelocityY(100 * character.getVitesse());
+                break;
         }
     }
 }
 function dead(character) {
-    heroespriteMap.get(character.getName()).destroy();
     if (character instanceof Ennemy) {
-        if (ennemies.some(e => e.placed == true))
-            joueur.inventaire.getHeros().filter(e => e.getTarget() == this).forEach(findTarget);
-        else {
-            //plus de combattants adverses
-            fight();
-            alert("Victoire !!");
-        }
+        j.inventaire.getHeros().filter(e => e.getTarget() == this).forEach(findTarget);
     }
     else if (character instanceof Hero) {
-        if (ennemies.some(e => e.placed == true))
-            ennemies.filter(e => e.getTarget() == this).forEach(findTarget);
-        else {
-            fight();
-            alert("Défaite !!");
-        }
+        ennemies.filter(e => e.getTarget() == this).forEach(findTarget);
     }
+    character.removeFromBattle();
+}
+function findY(offsetY) {
+    if (offsetY > 500)
+        return 5;
+    else if (offsetY > 400)
+        return 4;
+    else if (offsetY > 310)
+        return 3;
+    else if (offsetY > 225)
+        return 2;
+    else if (offsetY > 145)
+        return 1;
+    else
+        return 0;
+}
+function findCentreY(y) {
+    if (y == 5)
+        return 555;
+    else if (y == 4)
+        return 450;
+    else if (y == 3)
+        return 355;
+    else if (y == 2)
+        return 270;
+    else if (y == 1)
+        return 185;
+    else if (y == 0)
+        return 110;
+    else
+        return 660;
 }
 ///<reference path="../../lib/phaser.d.ts"/>
 var game;
-var scene;
 var player;
 var cursors;
 var controls;
 var readyCount;
-var heroespriteMap;
+var listeheros;
+var listeEquipement;
+var jsonsize = 5;
+var data;
 window.onload = function () {
     var config = {
         type: Phaser.AUTO,
@@ -706,7 +762,7 @@ window.onload = function () {
             default: 'arcade',
         },
         pixelArt: true,
-        scene: [preloadScene, mainScene, menuCombatScene]
+        scene: [preloadScene, mainScene, menuCombatScene, shopScene]
     };
     game = new Phaser.Game(config);
     game.scene.start("preloadScene");
@@ -714,7 +770,6 @@ window.onload = function () {
 class preloadScene extends Phaser.Scene {
     constructor() {
         super({ key: 'preloadScene' });
-        scene = this;
     }
     preload() {
         // display progress bar
@@ -775,9 +830,11 @@ class preloadScene extends Phaser.Scene {
             assetText.destroy();
         });
         // load assets needed in our game
-        heroespriteMap = new Map();
-        this.load.image('tiles', './assets/tilemap/tmw_desert_spacing.png');
+        this.load.json('herodata', './assets/Heroes.json');
         this.load.tilemapTiledJSON('map', './assets/tilemap/carte.json');
+        this.load.image('tiles', './assets/tilemap/tmw_desert_spacing.png');
+        this.load.image('shop', './assets/tilemap/Shop/shopicon.png');
+        this.load.image('shopbackground', './assets/tilemap/Shop/shopbackground.jpg');
         this.load.image('player', './assets/tilemap/tank.png');
         this.load.image('arene', './assets/arenes/arene_foudre.png');
         this.load.image('font', './assets/arenes/background4.jpg');
@@ -802,11 +859,73 @@ class preloadScene extends Phaser.Scene {
         this.load.image('werewolf', './assets/heroes/werewolf.png');
         this.load.image('woruc', './assets/heroes/woruc.png');
         this.load.image('groof', './assets/heroes/woruc.png');
+        this.load.image('battleaxe', './assets/equipements/battleaxe.png');
+        this.load.image('battleaxe2', './assets/equipements/battleaxe2.png');
+        this.load.image('battleaxe3', './assets/equipements/battleaxe3.png');
+        this.load.image('dagger', './assets/equipements/dagger.png');
+        this.load.image('dagger1', './assets/equipements/dagger1.png');
+        this.load.image('masse', './assets/equipements/masse.png');
+        listeheros = [];
+        listeEquipement = [];
     }
     create() {
+        data = this.cache.json.get('herodata');
+        // Ajout des objets depuis le fichier JSON dans leur listes respectives
+        for (let i = 0; i < jsonsize; i++) {
+            listeheros.push(new HerofromJson(data.Heroes[i].name, data.Heroes[i].attaque, data.Heroes[i].pdv, data.Heroes[i].valeur));
+            listeEquipement.push(new EquipementFromJson(data.Equipement[i].name, data.Equipement[i].type, data.Equipement[i].propriete, data.Equipement[i].valeur));
+        }
         game.scene.start("mainScene");
     }
     update() {
+    }
+}
+///<reference path="../../lib/phaser.d.ts"/>
+var j = new Joueur("Franst");
+var shopsize = 5;
+var ItemHero;
+var ItemEquipement;
+class shopScene extends Phaser.Scene {
+    constructor() {
+        super({ key: "shopScene" });
+    }
+    preload() {
+        this.add.image(700, 400, 'shopbackground');
+    }
+    create() {
+        ItemHero = [];
+        ItemEquipement = [];
+        var TxtExit = this.add.text(700, 700, 'RETOUR A LA CARTE DU MONDE', { fill: '#FF0000', backgroundColor: '#000000' });
+        TxtExit.setInteractive();
+        TxtExit.on('pointerdown', function () {
+            this.scene.stop('shopScene');
+            this.scene.resume("mainScene");
+        }, this);
+        this.add.text(150, 75, 'HEROS', { fill: '#0f0', backgroundColor: ' #582900' });
+        this.add.text(150, 375, 'EQUIPEMENTS', { fill: '#0f0', backgroundColor: ' #582900' });
+        for (let i = 0; i < shopsize; i++) {
+            ItemHero[i] = this.add.text((150 + (i * 200)), 100, [listeheros[i].getName(), listeheros[i].getAttaque().toString(), listeheros[i].getPdv().toString(), listeheros[i].getValeur().toString()], { fill: '#0f0', backgroundColor: ' #582900' });
+            ItemHero[i].setInteractive();
+            ItemHero[i].on('pointerdown', () => addElementtoInventory(listeheros[i]));
+            ItemEquipement[i] = this.add.text((150 + (i * 200)), 400, [listeEquipement[i].getName(), listeEquipement[i].getType(), listeEquipement[i].getPropriete(), listeEquipement[i].getValeur().toString()], { fill: '#0f0', backgroundColor: ' #582900' });
+            ItemEquipement[i].setInteractive();
+            ItemEquipement[i].on('pointerdown', () => addElementtoInventory(listeEquipement[i]));
+        }
+    }
+    update() {
+        //   j.getInventaire().getHeros().forEach((e)=> console.log(e.getName()));
+    }
+}
+function addElementtoInventory(element) {
+    j.inventaire.addPopulation(1);
+    j.subGold(element.getValeur());
+    if (element instanceof HerofromJson) {
+        element.selected = true;
+        alert("Il vous reste" + j.getor() + "or");
+    }
+    else if (element instanceof EquipementFromJson) {
+        element.selected = true;
+        alert("Il vous reste" + j.getor() + "or");
     }
 }
 //# sourceMappingURL=bundle.js.map

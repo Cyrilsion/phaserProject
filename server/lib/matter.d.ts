@@ -2313,11 +2313,11 @@ declare namespace MatterJS {
 
         /**
          * Sets the position of the body instantly. Velocity, angle, force etc. are unchanged.
-         * @method setPosition
+         * @method changePosition
          * @param {body} body
          * @param {vector} position
          */
-        static setPosition (body: BodyType, position: Vector): void;
+        static changePosition (body: BodyType, position: Vector): void;
 
         /**
          * Sets the angle of the body instantly. Angular velocity, position, force etc. are unchanged.
@@ -2491,11 +2491,11 @@ declare namespace MatterJS {
 
         /**
          * Sets the position of the body instantly. Velocity, angle, force etc. are unchanged.
-         * @method setPosition
+         * @method changePosition
          * @param {body} body
          * @param {vector} position
          */
-        setPosition (body: BodyType, position: Vector): void;
+        changePosition (body: BodyType, position: Vector): void;
 
         /**
          * Sets the angle of the body instantly. Angular velocity, position, force etc. are unchanged.

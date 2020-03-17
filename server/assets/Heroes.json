@@ -1,0 +1,74 @@
+{
+  "Heroes": 
+  [
+  {
+    "name": "beast",
+    "attaque": "15",
+    "pdv": "120",
+    "level": "1",
+    "valeur": "10"
+  },
+   {
+    "name": "brigand",
+    "attaque": "8",
+    "pdv": "70",
+    "level": "Herbert Schildt",
+    "valeur": "8"
+   },
+  {
+    "name": "dwarf",
+    "attaque": "12",
+    "pdv": "150",
+    "level": "Herbert Schildt",
+    "valeur": "13"
+   },
+     {
+    "name": "elzak",
+    "attaque": "8",
+    "pdv": "110",
+    "level": "1",
+    "valeur": "9"
+   },
+     {
+    "name": "ghoul",
+    "attaque": "6",
+    "pdv": "80",
+    "level": "1",
+    "valeur": "4"
+   }
+],
+  "Equipement":
+  [
+  {
+    "name": "battleaxe",
+    "type": "Armes",
+    "propriete": "Rapide",
+    "valeur": "16"
+  },
+  {
+    "name": "battleaxe2",
+    "type": "Armes",
+    "propriete": "Fort",
+    "valeur": "18"
+  },
+  {
+    "name": "battleaxe3",
+    "type": "Magique",
+    "propriete": "Magique",
+    "valeur": "15"
+  },
+  {
+    "name": "dagger",
+    "type": "Java",
+    "propriete": "Magique",
+    "valeur": "6"
+  },
+  {
+    "name": "masse",
+    "type": "Armure",
+    "propriete": "Defensif",
+    "valeur": "10"
+  }
+  ]
+  
+}

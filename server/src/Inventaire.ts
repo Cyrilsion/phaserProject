@@ -20,12 +20,11 @@ class Inventaire {
     addPopulation(increase: number) {
       this.population += increase;
     }
-    addHero(name: string) {
-      var hero: Hero = new Hero(name);
+    addHero(hero: Hero) {
       this.heros.push(hero);
     }
-    addEquipement(name: string, type: string, propriete: string, valeur: number) {
-      var equipement: Equipement = new Equipement(name, type, propriete, valeur);
+    addEquipement(scene: Phaser.Scene, x: number, y: number,name: string, valeur: number) {
+      var equipement: Equipement = new Equipement(scene, x, y, name, valeur);
       this.equipements.push(equipement);
     }
 
