@@ -1,0 +1,5 @@
+﻿Principe du jeu: Parcourir la carte du monde et affronter les ennemis. 
+Le joueur commence avec un inventaire vide et 50 pièces d'or. 
+Il peut rentrer dans une boutique afin d'acheter de l'équipement et des héros en appuyant sur la touche "b" sur une case boutique.
+Une fois acheté, il peut faire des combats. 
+Pour cela, il doit aller sur une case ou se trouve un ennemi(pas encore implémenté) et appuyer sur la touche "c".

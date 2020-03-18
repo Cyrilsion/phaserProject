@@ -1,0 +1,24 @@
+﻿Construire le projet: 
+
+Creer un fichier tsconfig.json ou seront spécifiées les règles de construction du projet.
+Dans notre cas, le tsconfig.json donne plusieurs informations au transcompilateur comme la version. 
+2 lignes nous intéressent plus en détail : - les fichiers à transcompiler(dossier src)
+					   - un fichier de sortie (bundle.js)
+
+Avec Sublime Text:
+Telecharger le plugin TypeScript.
+Appuyer sur cntrl+shift+B.
+
+
+Par ligne de commande:
+Dans le dossier du projet, lancer la commande tsc avec aucune option. 
+
+Dans les deux cas, le transcompilateur trouvera le fichier tsconfig.json et construira le projet selon ces règles.
+
+
+Lancer le projet: 
+
+Pour des raisons de sécurité liées au protocole http, il faut passer par un serveur Web pour lancer le projet. 
+Un serveur basique en Python est inclus dans le projet sous le nom "server.py". 
+Il faut que Python 3.8 soit installé sur votre machine pour éxecuter ce programme. 
+Une fois le serveur web lancé, on y accède depuis n'importe quel navigateur à l'adresse "127.0.0.1/index.py".
